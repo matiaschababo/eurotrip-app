@@ -63,6 +63,8 @@ const defaultPreferences: TripPreferences = {
 const TripContext = createContext<TripContextType | undefined>(undefined);
 
 export const TripProvider = ({ children }: PropsWithChildren<{}>) => {
+  import { defaultTripSession } from '../data/defaultTrip';
+
   const [step, setStep] = useState(1);
   const [profile, setProfile] = useState<TravelerProfile>(defaultProfile);
   const [preferences, setPreferences] = useState<TripPreferences>(defaultPreferences);
@@ -71,25 +73,31 @@ export const TripProvider = ({ children }: PropsWithChildren<{}>) => {
   const [travelerGuide, setTravelerGuide] = useState<TravelerGuide | null>(null);
   const [tripRequirements, setTripRequirements] = useState<TripRequirements | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  
+
+  // Load default session on mount
+  useEffect(() => {
+    // We cast it to TripSession because the JSON import might inferred slightly differently
+    loadSession(defaultTripSession as unknown as TripSession);
+  }, []);
+
   const [sessionCreatedAt, setSessionCreatedAt] = useState<number>(Date.now());
   const lastItineraryId = useRef<string | null>(null);
 
   // Logic: Reset secondary data ONLY if the itinerary identity (ID) changes significantly
   const setItinerary = (newItinerary: GeneratedItinerary | null) => {
     if (newItinerary && newItinerary.id !== lastItineraryId.current) {
-        // If it's a completely new itinerary (different ID), we should probably clear the old guide
-        // but the user might want to keep it if they just made a small edit.
-        // For now, let's keep it but mark for regeneration if the user desires.
-        // As requested: "En el unico momento donde se tendrian que volver a generar es si cambio algo del itinerario principal."
-        setTravelerGuide(null);
-        setTripRequirements(null);
-        lastItineraryId.current = newItinerary.id;
+      // If it's a completely new itinerary (different ID), we should probably clear the old guide
+      // but the user might want to keep it if they just made a small edit.
+      // For now, let's keep it but mark for regeneration if the user desires.
+      // As requested: "En el unico momento donde se tendrian que volver a generar es si cambio algo del itinerario principal."
+      setTravelerGuide(null);
+      setTripRequirements(null);
+      lastItineraryId.current = newItinerary.id;
     }
     setItineraryState(newItinerary);
-    
+
     if (newItinerary && availableRoutes.length > 0) {
-      setAvailableRoutes(prevRoutes => 
+      setAvailableRoutes(prevRoutes =>
         prevRoutes.map(route => route.id === newItinerary.id ? newItinerary : route)
       );
     }
@@ -103,7 +111,7 @@ export const TripProvider = ({ children }: PropsWithChildren<{}>) => {
     setAvailableRoutes(session.availableRoutes || []);
     setTravelerGuide(session.travelerGuide || null);
     setTripRequirements(session.tripRequirements || null);
-    
+
     if (session.itinerary) {
       lastItineraryId.current = session.itinerary.id;
       setStep(4);
