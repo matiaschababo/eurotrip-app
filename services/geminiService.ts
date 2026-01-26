@@ -7,9 +7,9 @@ const PRO_MODEL = "gemini-3-pro-preview";
 const TTS_MODEL = "gemini-2.5-flash-preview-tts";
 
 const getAIClient = () => {
-  const apiKey = process.env.API_KEY;
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY);
   if (!apiKey) {
-    console.error("API_KEY is missing");
+    console.error("VITE_GEMINI_API_KEY is missing");
     return null;
   }
   return new GoogleGenAI({ apiKey });
@@ -31,7 +31,7 @@ const stopSchemaProperties = {
     required: ["lat", "lng"],
     description: "Coordenadas exactas para plotear en mapa"
   },
-  
+
   // EXPLICIT TIMES
   arrivalTime: { type: Type.STRING, description: "Hora de llegada estimada a ESTA ciudad (ej: '14:00'). IMPORTANTE: Si es la primera ciudad, DEBE coincidir con la hora de aterrizaje del vuelo." },
   departureTime: { type: Type.STRING, description: "Hora de salida de ESTA ciudad hacia la siguiente (ej: '10:00')." },
@@ -164,23 +164,23 @@ export const generateTripPlan = async (
   // City Specific Constraints
   let cityRules = "";
   if (prefs.cityConstraints && prefs.cityConstraints.length > 0) {
-     cityRules = "REGLAS OBLIGATORIAS POR CIUDAD (NOCHES Y ORDEN):\n";
-     prefs.cityConstraints.forEach(c => {
-        let nightsText = "";
-        if (c.fixedNights === 0) {
-            nightsText = "0 noches (TRÁNSITO). El usuario llega a esta ciudad pero NO duerme aquí. Debe salir hacia la siguiente ciudad el MISMO día o inmediatamente. Úsala como punto de conexión.";
-        } else if (c.fixedNights !== null) {
-            nightsText = `${c.fixedNights} noches fijas.`;
-        } else {
-            nightsText = "Noches flexibles (IA decide).";
-        }
+    cityRules = "REGLAS OBLIGATORIAS POR CIUDAD (NOCHES Y ORDEN):\n";
+    prefs.cityConstraints.forEach(c => {
+      let nightsText = "";
+      if (c.fixedNights === 0) {
+        nightsText = "0 noches (TRÁNSITO). El usuario llega a esta ciudad pero NO duerme aquí. Debe salir hacia la siguiente ciudad el MISMO día o inmediatamente. Úsala como punto de conexión.";
+      } else if (c.fixedNights !== null) {
+        nightsText = `${c.fixedNights} noches fijas.`;
+      } else {
+        nightsText = "Noches flexibles (IA decide).";
+      }
 
-        let orderText = "";
-        if (c.visitOrder === 'START') orderText = "DEBE ser la PRIMERA parada (o justo después de llegar).";
-        if (c.visitOrder === 'END') orderText = "DEBE ser la ÚLTIMA parada (antes de volver).";
-        
-        cityRules += `- ${c.city}: ${nightsText} ${orderText}\n`;
-     });
+      let orderText = "";
+      if (c.visitOrder === 'START') orderText = "DEBE ser la PRIMERA parada (o justo después de llegar).";
+      if (c.visitOrder === 'END') orderText = "DEBE ser la ÚLTIMA parada (antes de volver).";
+
+      cityRules += `- ${c.city}: ${nightsText} ${orderText}\n`;
+    });
   }
 
   const prompt = `
@@ -321,7 +321,7 @@ export const analyzeTripImage = async (base64Image: string): Promise<any | null>
       endDate: { type: Type.STRING, description: "Fecha de regreso final YYYY-MM-DD." },
       mustVisitCities: { type: Type.ARRAY, items: { type: Type.STRING } },
       mustVisitCountries: { type: Type.ARRAY, items: { type: Type.STRING } },
-      
+
       // Detailed Flight Data
       flightDetails: {
         type: Type.OBJECT,
@@ -330,22 +330,22 @@ export const analyzeTripImage = async (base64Image: string): Promise<any | null>
           outbound: {
             type: Type.OBJECT,
             properties: {
-               arrivalCity: { type: Type.STRING, description: "Ciudad donde aterriza en destino (ej: Madrid)" },
-               arrivalDate: { type: Type.STRING, description: "Fecha de aterrizaje YYYY-MM-DD" },
-               arrivalTime: { type: Type.STRING, description: "Hora de aterrizaje HH:MM" },
+              arrivalCity: { type: Type.STRING, description: "Ciudad donde aterriza en destino (ej: Madrid)" },
+              arrivalDate: { type: Type.STRING, description: "Fecha de aterrizaje YYYY-MM-DD" },
+              arrivalTime: { type: Type.STRING, description: "Hora de aterrizaje HH:MM" },
             }
           },
           inbound: {
-             type: Type.OBJECT,
-             properties: {
-                departureCity: { type: Type.STRING, description: "Ciudad desde donde regresa (ej: Roma)" },
-                departureDate: { type: Type.STRING, description: "Fecha de despegue de vuelta YYYY-MM-DD" },
-                departureTime: { type: Type.STRING, description: "Hora de despegue HH:MM" }
-             }
+            type: Type.OBJECT,
+            properties: {
+              departureCity: { type: Type.STRING, description: "Ciudad desde donde regresa (ej: Roma)" },
+              departureDate: { type: Type.STRING, description: "Fecha de despegue de vuelta YYYY-MM-DD" },
+              departureTime: { type: Type.STRING, description: "Hora de despegue HH:MM" }
+            }
           }
         }
       },
-      
+
       detectedContext: { type: Type.STRING, description: "Breve frase de lo que encontraste. Ej: 'Detecté tu vuelo a Madrid saliendo el 1 de Mayo'" }
     }
   };
@@ -397,31 +397,31 @@ export const reconstructSessionFromDocument = async (base64Data: string, mimeTyp
       createdAt: { type: Type.NUMBER },
       lastModified: { type: Type.NUMBER },
       profile: {
-         type: Type.OBJECT,
-         properties: {
-           adults: { type: Type.INTEGER },
-           children: { type: Type.INTEGER },
-           originCity: { type: Type.STRING },
-           flexibleOrigin: { type: Type.BOOLEAN }
-         },
-         required: ["adults", "children", "originCity"]
+        type: Type.OBJECT,
+        properties: {
+          adults: { type: Type.INTEGER },
+          children: { type: Type.INTEGER },
+          originCity: { type: Type.STRING },
+          flexibleOrigin: { type: Type.BOOLEAN }
+        },
+        required: ["adults", "children", "originCity"]
       },
       preferences: {
-         type: Type.OBJECT,
-         properties: {
-           startDate: { type: Type.STRING },
-           endDate: { type: Type.STRING },
-           durationDays: { type: Type.INTEGER },
-           season: { type: Type.STRING, enum: ["Primavera", "Verano", "Otoño", "Invierno"] },
-           style: { type: Type.STRING },
-           mustVisitCountries: { type: Type.ARRAY, items: { type: Type.STRING } },
-           mustVisitCities: { type: Type.ARRAY, items: { type: Type.STRING } },
-           budgetLevel: { type: Type.STRING },
-           interests: { type: Type.ARRAY, items: { type: Type.STRING } },
-           specificRequests: { type: Type.STRING },
-           creditCard: { type: Type.STRING }
-         },
-         required: ["startDate", "endDate", "mustVisitCountries"]
+        type: Type.OBJECT,
+        properties: {
+          startDate: { type: Type.STRING },
+          endDate: { type: Type.STRING },
+          durationDays: { type: Type.INTEGER },
+          season: { type: Type.STRING, enum: ["Primavera", "Verano", "Otoño", "Invierno"] },
+          style: { type: Type.STRING },
+          mustVisitCountries: { type: Type.ARRAY, items: { type: Type.STRING } },
+          mustVisitCities: { type: Type.ARRAY, items: { type: Type.STRING } },
+          budgetLevel: { type: Type.STRING },
+          interests: { type: Type.ARRAY, items: { type: Type.STRING } },
+          specificRequests: { type: Type.STRING },
+          creditCard: { type: Type.STRING }
+        },
+        required: ["startDate", "endDate", "mustVisitCountries"]
       },
       itinerary: singleItineraryStructure,
       version: { type: Type.STRING }
@@ -431,7 +431,7 @@ export const reconstructSessionFromDocument = async (base64Data: string, mimeTyp
 
   try {
     const response = await ai.models.generateContent({
-      model: PRO_MODEL, 
+      model: PRO_MODEL,
       contents: {
         parts: [
           { inlineData: { mimeType: mimeType, data: base64Data } },
@@ -444,7 +444,7 @@ export const reconstructSessionFromDocument = async (base64Data: string, mimeTyp
         thinkingConfig: { thinkingBudget: 10000 },
       }
     });
-    
+
     const data = JSON.parse(response.text || "{}");
     return data as TripSession;
 
@@ -514,8 +514,8 @@ export const generateModificationOptions = async (
 };
 
 export const generateFlightOptions = async (
-  origin: string, 
-  firstStop: string, 
+  origin: string,
+  firstStop: string,
   lastStop: string,
   budgetLevel: string,
   creditCard: string,
@@ -524,7 +524,7 @@ export const generateFlightOptions = async (
   const ai = getAIClient();
   if (!ai) return [];
 
-  const originInstructions = isFlexibleOrigin 
+  const originInstructions = isFlexibleOrigin
     ? `Origen: El usuario es FLEXIBLE. Considera vuelos saliendo de ${origin} (Probablemente ROS) O de Buenos Aires (EZE/AEP). Busca opciones desde ambos lugares y elige las mejores.`
     : `Origen: ${origin}.`;
 
@@ -578,7 +578,7 @@ export const generateFlightOptions = async (
         agentTip: { type: Type.STRING, description: "Por qué conviene esta opción (ej: 'Ahorras $300 saliendo de EZE' o 'Mejor precio directo desde ROS')" },
         source: { type: Type.STRING, description: "Portal donde se encontró (TurismoCity, Skyscanner, Kayak)" },
         creditCardPerk: { type: Type.STRING, description: "Beneficio específico si aplica (ej: '6 Cuotas s/interés')" },
-        
+
         qualityScore: { type: Type.NUMBER, description: "Puntaje 1-10 de calidad del vuelo" },
         priceAnalysis: { type: Type.STRING, enum: ["Bargain", "Fair", "Expensive"] },
         emissionsEstimate: { type: Type.STRING, description: "Ej: '-12% CO2'" },
@@ -609,7 +609,7 @@ export const generateFlightOptions = async (
 export const fetchRealTimeAccommodations = async (
   city: string,
   country: string,
-  dates: string, 
+  dates: string,
   budgetLevel: string,
   guests: number
 ): Promise<{ hotels: AccommodationOption[], airbnbs: AccommodationOption[], comparison: string } | null> => {
@@ -648,7 +648,7 @@ export const fetchRealTimeAccommodations = async (
 
     const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/```\s*([\s\S]*?)\s*```/);
     let jsonString = "";
-    
+
     if (jsonMatch) {
       jsonString = jsonMatch[1];
     } else {
@@ -671,9 +671,9 @@ export const fetchRealTimeAccommodations = async (
 };
 
 export const generateCityDetails = async (
-  city: string, 
-  country: string, 
-  nights: number, 
+  city: string,
+  country: string,
+  nights: number,
   profile: TravelerProfile,
   budgetLevel: string,
   season: TravelSeason,
@@ -904,9 +904,9 @@ export const generateTravelerGuide = async (
       localTransport: {
         type: Type.OBJECT,
         properties: {
-           bestApp: { type: Type.STRING },
-           ticketTip: { type: Type.STRING },
-           costEstimate: { type: Type.STRING }
+          bestApp: { type: Type.STRING },
+          ticketTip: { type: Type.STRING },
+          costEstimate: { type: Type.STRING }
         },
         required: ["bestApp", "ticketTip"]
       },
@@ -995,7 +995,7 @@ export const sendChatMessage = async (
     // we primarily rely on the system instruction and the current message.
     // However, to keep chat history, we need to pass previous turns. 
     // Since the ChatWidget manages history state, we really just need to send the correct structure here.
-    
+
     const chat = ai.chats.create({
       model: FLASH_MODEL,
       config: {
@@ -1004,7 +1004,7 @@ export const sendChatMessage = async (
         TOOLS: Google Maps, Google Search, Modify Itinerary.
         `,
         tools: [
-          { googleMaps: {} }, 
+          { googleMaps: {} },
           { googleSearch: {} },
           { functionDeclarations: [modifyItineraryTool] }
         ],
@@ -1014,9 +1014,9 @@ export const sendChatMessage = async (
         parts: [{ text: msg.text }]
       }))
     });
-    
+
     const response = await chat.sendMessage({ message: newMessage });
-    
+
     if (!response) throw new Error("No response from AI");
 
     const text = response.text || "";
@@ -1035,7 +1035,7 @@ export const sendChatMessage = async (
         if (chunk.maps) {
           sources.push({ title: chunk.maps.title || "Mapa", url: chunk.maps.uri || "" });
         } else if (chunk.web) {
-           sources.push({ title: chunk.web.title || "Web", url: chunk.web.uri || "" });
+          sources.push({ title: chunk.web.title || "Web", url: chunk.web.uri || "" });
         }
       });
     }
@@ -1070,18 +1070,18 @@ export const playTextAsSpeech = async (text: string): Promise<void> => {
 
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
     const ctx = new AudioContext({ sampleRate: 24000 });
-    
+
     const binaryString = atob(base64Audio);
     const len = binaryString.length;
     const bytes = new Uint8Array(len);
     for (let i = 0; i < len; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
-    
+
     const dataInt16 = new Int16Array(bytes.buffer);
     const frameCount = dataInt16.length / 1;
     const audioBuffer = ctx.createBuffer(1, frameCount, 24000);
-    
+
     const channelData = audioBuffer.getChannelData(0);
     for (let i = 0; i < frameCount; i++) {
       channelData[i] = dataInt16[i] / 32768.0;
