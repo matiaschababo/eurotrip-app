@@ -23,6 +23,9 @@ interface TripContextType {
   exportSession: () => TripSession;
 }
 
+import { defaultTripSession } from '../data/defaultTrip';
+
+// Constants
 const defaultProfile: TravelerProfile = {
   adults: 2,
   children: 0,
@@ -63,7 +66,6 @@ const defaultPreferences: TripPreferences = {
 const TripContext = createContext<TripContextType | undefined>(undefined);
 
 export const TripProvider = ({ children }: PropsWithChildren<{}>) => {
-  import { defaultTripSession } from '../data/defaultTrip';
 
   const [step, setStep] = useState(1);
   const [profile, setProfile] = useState<TravelerProfile>(defaultProfile);
