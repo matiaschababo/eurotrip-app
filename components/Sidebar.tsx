@@ -1,7 +1,7 @@
 
 
 import React from 'react';
-import { Map, Calendar, Settings, MessageSquare, Home, CheckCircle, Briefcase, Compass, CalendarCheck } from 'lucide-react';
+import { Map, Calendar, Settings, MessageSquare, Home, CheckCircle, Briefcase, Compass, CalendarCheck, CheckSquare } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const Sidebar = () => {
@@ -38,6 +38,10 @@ const Sidebar = () => {
         <Link to="/schedule" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/schedule')}`}>
           <CalendarCheck size={20} />
           <span className="hidden lg:block">Cronograma</span>
+        </Link>
+        <Link to="/milestones" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/milestones')}`}>
+          <CheckSquare size={20} />
+          <span className="hidden lg:block">Hitos & Checklist</span>
         </Link>
         <Link to="/tips" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/tips')}`}>
           <Compass size={20} />

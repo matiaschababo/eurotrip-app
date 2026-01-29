@@ -9,6 +9,7 @@ import RouteSelection from './pages/RouteSelection';
 import ItineraryView from './pages/ItineraryView';
 import PreTripHub from './components/PreTripHub';
 import ScheduleView from './pages/ScheduleView';
+import MilestonesView from './pages/MilestonesView';
 import TravelerTips from './pages/TravelerTips';
 
 const App = () => {
@@ -22,6 +23,7 @@ const App = () => {
             <Route path="selection" element={<RouteSelection />} />
             <Route path="itinerary" element={<ItineraryView />} />
             <Route path="schedule" element={<ScheduleView />} />
+            <Route path="milestones" element={<MilestonesView />} />
             <Route path="pre-trip" element={<PreTripHub />} />
             <Route path="tips" element={<TravelerTips />} />
           </Route>
