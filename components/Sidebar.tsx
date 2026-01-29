@@ -1,7 +1,7 @@
 
 
 import React from 'react';
-import { Map, Calendar, Settings, MessageSquare, Home, CheckCircle, Briefcase, Compass } from 'lucide-react';
+import { Map, Calendar, Settings, MessageSquare, Home, CheckCircle, Briefcase, Compass, CalendarCheck } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const Sidebar = () => {
@@ -35,11 +35,15 @@ const Sidebar = () => {
           <Briefcase size={20} />
           <span className="hidden lg:block">Preparativos</span>
         </Link>
+        <Link to="/schedule" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/schedule')}`}>
+          <CalendarCheck size={20} />
+          <span className="hidden lg:block">Cronograma</span>
+        </Link>
         <Link to="/tips" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/tips')}`}>
           <Compass size={20} />
           <span className="hidden lg:block">Guía Experta</span>
         </Link>
-        
+
         <div className="hidden lg:block px-4 pt-6 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
           Herramientas
         </div>
