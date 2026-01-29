@@ -1,71 +1,98 @@
-
-
 import React from 'react';
-import { Map, Calendar, Settings, MessageSquare, Home, CheckCircle, Briefcase, Compass, CalendarCheck, CheckSquare } from 'lucide-react';
+import { Map, Calendar, Settings, MessageSquare, Home, CheckCircle, Briefcase, Compass, CalendarCheck, CheckSquare, X } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
-const Sidebar = () => {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path ? 'bg-primary-100 text-primary-700' : 'text-slate-600 hover:bg-slate-100';
 
+  // Desktop: Static sidebar. Mobile: slide-over drawer
+  // lg:static means on desktop it returns to normal flow
+  // lg:translate-x-0 ensures it's visible on desktop
+  const containerClasses = `
+    fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 flex flex-col h-screen transition-transform duration-300 ease-in-out
+    lg:translate-x-0 lg:static lg:z-0
+    ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+  `;
+
   return (
-    <div className="w-20 lg:w-64 bg-white border-r border-slate-200 flex flex-col h-screen sticky top-0 transition-all duration-300 z-40">
-      <div className="p-6 flex items-center justify-center lg:justify-start gap-3 border-b border-slate-100">
-        <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center text-white font-bold">
-          EP
+    <>
+      <div className={containerClasses}>
+        <div className="p-6 flex items-center justify-between border-b border-slate-100 h-16 lg:h-auto">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center text-white font-bold">
+              EP
+            </div>
+            <span className="font-bold text-slate-800 text-lg">EuroPlanner</span>
+          </div>
+          <button onClick={onClose} className="lg:hidden text-slate-400 hover:text-slate-600 p-1">
+            <X size={24} />
+          </button>
         </div>
-        <span className="hidden lg:block font-bold text-slate-800 text-lg">EuroPlanner</span>
+
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+          <Link onClick={onClose} to="/" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/')}`}>
+            <Home size={20} />
+            <span>Inicio</span>
+          </Link>
+          <Link onClick={onClose} to="/wizard" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/wizard')}`}>
+            <Calendar size={20} />
+            <span>Planificar</span>
+          </Link>
+          <Link onClick={onClose} to="/itinerary" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/itinerary')}`}>
+            <Map size={20} />
+            <span>Mi Ruta</span>
+          </Link>
+          <Link onClick={onClose} to="/pre-trip" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/pre-trip')}`}>
+            <Briefcase size={20} />
+            <span>Preparativos</span>
+          </Link>
+          <Link onClick={onClose} to="/schedule" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/schedule')}`}>
+            <CalendarCheck size={20} />
+            <span>Cronograma</span>
+          </Link>
+          <Link onClick={onClose} to="/milestones" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/milestones')}`}>
+            <CheckSquare size={20} />
+            <span>Hitos & Checklist</span>
+          </Link>
+          <Link onClick={onClose} to="/tips" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/tips')}`}>
+            <Compass size={20} />
+            <span>Guía Experta</span>
+          </Link>
+
+          <div className="px-4 pt-6 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            Herramientas
+          </div>
+          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-600 hover:bg-slate-100 transition-colors text-left">
+            <MessageSquare size={20} />
+            <span>Asistente IA</span>
+          </button>
+        </nav>
+
+        <div className="p-4 border-t border-slate-100">
+          <div className="bg-slate-50 p-3 rounded-lg">
+            <p className="text-xs text-slate-500 text-center lg:text-left">
+              <span className="lg:inline">Conectado como </span>
+              <span className="font-semibold block lg:inline">Familia Rosario</span>
+            </p>
+          </div>
+        </div>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2">
-        <Link to="/" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/')}`}>
-          <Home size={20} />
-          <span className="hidden lg:block">Inicio</span>
-        </Link>
-        <Link to="/wizard" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/wizard')}`}>
-          <Calendar size={20} />
-          <span className="hidden lg:block">Planificar (Fase 1)</span>
-        </Link>
-        <Link to="/itinerary" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/itinerary')}`}>
-          <Map size={20} />
-          <span className="hidden lg:block">Mi Ruta</span>
-        </Link>
-        <Link to="/pre-trip" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/pre-trip')}`}>
-          <Briefcase size={20} />
-          <span className="hidden lg:block">Preparativos</span>
-        </Link>
-        <Link to="/schedule" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/schedule')}`}>
-          <CalendarCheck size={20} />
-          <span className="hidden lg:block">Cronograma</span>
-        </Link>
-        <Link to="/milestones" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/milestones')}`}>
-          <CheckSquare size={20} />
-          <span className="hidden lg:block">Hitos & Checklist</span>
-        </Link>
-        <Link to="/tips" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/tips')}`}>
-          <Compass size={20} />
-          <span className="hidden lg:block">Guía Experta</span>
-        </Link>
-
-        <div className="hidden lg:block px-4 pt-6 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-          Herramientas
-        </div>
-        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-600 hover:bg-slate-100 transition-colors text-left">
-          <MessageSquare size={20} />
-          <span className="hidden lg:block">Asistente IA</span>
-        </button>
-      </nav>
-
-      <div className="p-4 border-t border-slate-100">
-        <div className="bg-slate-50 p-3 rounded-lg">
-          <p className="text-xs text-slate-500 text-center lg:text-left">
-            <span className="hidden lg:inline">Conectado como </span>
-            <span className="font-semibold">Familia Rosario</span>
-          </p>
-        </div>
-      </div>
-    </div>
+      {/* Overlay for mobile */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
+          onClick={onClose}
+        />
+      )}
+    </>
   );
 };
 
