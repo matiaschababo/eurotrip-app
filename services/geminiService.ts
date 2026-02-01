@@ -3,13 +3,13 @@ import { GoogleGenAI, Type, Schema, FunctionDeclaration } from "@google/genai";
 import { TripPreferences, TravelerProfile, GeneratedItinerary, ChatMessage, FlightOption, CityDetails, TravelSeason, TripStyle, ModificationOption, TripRequirements, TripSession, AccommodationOption, TravelerGuide, DailyActivity } from "../types";
 
 const FLASH_MODEL = "gemini-2.5-flash";
-const PRO_MODEL = "gemini-3-pro-preview";
+const PRO_MODEL = "gemini-2.5-flash";
 const TTS_MODEL = "gemini-2.5-flash-preview-tts";
 
 const getAIClient = () => {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY);
   if (!apiKey) {
-    console.error("VITE_GEMINI_API_KEY is missing");
+    console.error("FATAL: VITE_GEMINI_API_KEY is missing in environment variables.");
     return null;
   }
   return new GoogleGenAI({ apiKey });
@@ -507,8 +507,15 @@ export const generateModificationOptions = async (
     const text = response.text;
     if (!text) return [];
     return JSON.parse(text) as ModificationOption[];
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating modification options:", error);
+
+    // Check for specific Google AI errors
+    if (error.message?.includes('API key')) {
+      console.error("FATAL: API Key invalid or missing.");
+    }
+
+    // Return empty array but log visible error for frontend if possible (returning empty array triggers fallback UI)
     return [];
   }
 };
@@ -859,6 +866,81 @@ export const generateTripRequirements = async (countries: string[], origin: stri
   } catch (e) {
     console.error(e);
     return null;
+  }
+};
+
+export const integrateMilestoneIntoDay = async (
+  currentActivities: DailyActivity[],
+  newMilestone: { time: string; activity: string; description: string },
+  cityContext: string
+): Promise<DailyActivity[]> => {
+  const ai = getAIClient();
+  if (!ai) return [...currentActivities, { ...newMilestone, isUserAdded: true }];
+
+  const prompt = `
+    Eres un planificador de itinerarios inteligente.
+    Ciudad: ${cityContext}.
+    
+    PLAN ACTUAL:
+    ${JSON.stringify(currentActivities)}
+    
+    EL USUARIO AGREGA ESTE HITO FIJO (NO MOVER):
+    Hora: ${newMilestone.time}
+    Actividad: ${newMilestone.activity}
+    Detalle: ${newMilestone.description}
+    
+    TU MISIÓN:
+    1. Inserta el nuevo hito del usuario en el horario correspondiente.
+    2. REORGANIZA las actividades existentes para que tengan sentido logístico alrededor del nuevo hito.
+    3. Si alguna actividad vieja entra en conflicto directo de horario con el nuevo hito, elimínala o muévela.
+    4. NO ELIMINES otros hitos agregados por el usuario (marcados con isUserAdded: true).
+    
+    IMPORTANTE:
+    - El hito del usuario debe tener "isUserAdded": true.
+    - Mantén el formato JSON idéntico.
+  `;
+
+  const schema: Schema = {
+    type: Type.ARRAY,
+    items: {
+      type: Type.OBJECT,
+      properties: {
+        time: { type: Type.STRING },
+        activity: { type: Type.STRING },
+        description: { type: Type.STRING },
+        isUserAdded: { type: Type.BOOLEAN },
+        bookingStatus: { type: Type.STRING, enum: ['PLANNED', 'BOOKED', 'CONFIRMED'] }
+      },
+      required: ["time", "activity", "description"]
+    }
+  };
+
+  try {
+    const response = await ai.models.generateContent({
+      model: PRO_MODEL,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: schema
+      }
+    });
+
+    const newPlan = JSON.parse(response.text || "[]") as DailyActivity[];
+
+    // Safety check: ensure the user milestone is there. If AI hallucinated it away, force add it.
+    const exists = newPlan.find(a => a.activity === newMilestone.activity && a.time === newMilestone.time);
+    if (!exists) {
+      newPlan.push({ ...newMilestone, isUserAdded: true });
+      newPlan.sort((a, b) => a.time.localeCompare(b.time));
+    }
+
+    return newPlan;
+
+  } catch (e) {
+    console.error("Error integrating milestone:", e);
+    // Fallback: Just append and sort
+    const simpleUpdate = [...currentActivities, { ...newMilestone, isUserAdded: true }];
+    return simpleUpdate.sort((a, b) => a.time.localeCompare(b.time));
   }
 };
 

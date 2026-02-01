@@ -45,11 +45,11 @@ export interface TripPreferences {
   season: TravelSeason;
   style: TripStyle;
   mustVisitCountries: string[];
-  mustVisitCities: string[]; 
+  mustVisitCities: string[];
   cityConstraints: CityConstraint[]; // Nuevo campo para control fino
   budgetLevel: 'Bajo' | 'Medio' | 'Alto';
-  interests: string[]; 
-  specificRequests: string; 
+  interests: string[];
+  specificRequests: string;
   creditCard: string;
   existingFlight: FixedFlightDetails;
 }
@@ -59,6 +59,7 @@ export interface DailyActivity {
   activity: string;
   description: string;
   bookingStatus?: 'PLANNED' | 'BOOKED' | 'CONFIRMED';
+  isUserAdded?: boolean;
 }
 
 export interface Coordinates {
@@ -73,7 +74,7 @@ export interface ItineraryStop {
   departureDay: number;
   nights: number;
   coordinates: Coordinates;
-  
+
   // EXPLICIT LOGISTICS TIMES
   arrivalTime: string;   // "14:30 PM" (Hora de llegada a ESTA ciudad)
   departureTime: string; // "10:00 AM" (Hora de salida de ESTA ciudad hacia la siguiente)
@@ -83,11 +84,11 @@ export interface ItineraryStop {
   transportDuration: string; // e.g. "3h 45m"
   transportTime: string; // Legacy field, mapped to departureTime usually
   transportDescription: string; // Detailed logic "Train from Atocha to Sants"
-  
+
   transportDetails: string; // Legacy/Fallback
   highlights: string[];
-  keyMilestones: string[]; 
-  dailyPlan: DailyActivity[]; 
+  keyMilestones: string[];
+  dailyPlan: DailyActivity[];
   estimatedCost: string;
   bookingStatus?: 'NONE' | 'PARTIAL' | 'FULL';
 }
@@ -109,7 +110,7 @@ export interface GeneratedItinerary {
   summary: string;
   stops: ItineraryStop[];
   totalEstimatedCostUSD: string;
-  budgetBreakdown: BudgetBreakdown; 
+  budgetBreakdown: BudgetBreakdown;
   tipsForArgentinians: string[];
   efficiencyStats?: {
     transitTimeHours: number;
@@ -128,11 +129,11 @@ export interface ChatMessage {
 
 export interface FlightSegment {
   airline: string;
-  flightNumber: string; 
+  flightNumber: string;
   departureCity: string;
-  departureIata: string; 
+  departureIata: string;
   arrivalCity: string;
-  arrivalIata: string; 
+  arrivalIata: string;
   duration: string;
 }
 
@@ -140,15 +141,15 @@ export interface FlightOption {
   id: string;
   airline: string;
   price: string;
-  agentTip: string; 
-  source: string; 
-  creditCardPerk?: string; 
-  qualityScore: number; 
+  agentTip: string;
+  source: string;
+  creditCardPerk?: string;
+  qualityScore: number;
   priceAnalysis: 'Bargain' | 'Fair' | 'Expensive';
-  emissionsEstimate: string; 
+  emissionsEstimate: string;
   outbound: FlightSegment;
   inbound: FlightSegment;
-  bookingLink: string; 
+  bookingLink: string;
 }
 
 export interface DayPlan {
@@ -165,7 +166,7 @@ export interface AccommodationOption {
   description: string;
   pricePerNight: string;
   rating: string;
-  matchScore: number; 
+  matchScore: number;
   pros: string[];
   cons: string[];
   features: string[];
@@ -175,8 +176,8 @@ export interface AccommodationOption {
 
 export interface CityDetails {
   cityName: string;
-  bestAreasToStay: string; 
-  transportationTips: string; 
+  bestAreasToStay: string;
+  transportationTips: string;
   dayByDay: DayPlan[];
   packingAdvice: {
     clothing: string[];
@@ -192,8 +193,8 @@ export interface ModificationOption {
   id: string;
   title: string;
   description: string;
-  impactOnBudget: string; 
-  impactOnPace: string; 
+  impactOnBudget: string;
+  impactOnPace: string;
   modifiedItinerary: GeneratedItinerary;
 }
 
@@ -222,10 +223,10 @@ export interface TripRequirements {
   };
   currencyStrategy: {
     currencies: string[];
-    tips: string; 
+    tips: string;
   };
   techSpecs: {
-    plugTypes: string[]; 
+    plugTypes: string[];
     voltage: string;
     adapterAdvice: string;
   };
@@ -238,17 +239,17 @@ export interface TripRequirements {
 export interface CityExpertGuide {
   city: string;
   localTransport: {
-    bestApp: string; 
-    ticketTip: string; 
+    bestApp: string;
+    ticketTip: string;
     costEstimate: string;
   };
   moneyTactics: {
-    tipping: string; 
-    cashOrCard: string; 
+    tipping: string;
+    cashOrCard: string;
   };
-  safetyAlerts: string[]; 
-  hiddenGems: string[]; 
-  foodieTips: string; 
+  safetyAlerts: string[];
+  hiddenGems: string[];
+  foodieTips: string;
 }
 
 export interface TravelerGuide {
@@ -265,8 +266,9 @@ export interface TripSession {
   preferences: TripPreferences;
   itinerary: GeneratedItinerary | null;
   availableRoutes: GeneratedItinerary[];
-  travelerGuide: TravelerGuide | null; 
+  travelerGuide: TravelerGuide | null;
   tripRequirements: TripRequirements | null; // Nuevo campo persistente
+  aiChatHistory?: ModificationOption[]; // Historial del chat
   version: string;
 }
 

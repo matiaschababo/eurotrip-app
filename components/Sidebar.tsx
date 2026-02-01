@@ -1,5 +1,5 @@
 import React from 'react';
-import { Map, Calendar, Settings, MessageSquare, Home, CheckCircle, Briefcase, Compass, CalendarCheck, CheckSquare, X } from 'lucide-react';
+import { Map, Calendar, Settings, MessageSquare, Home, CheckCircle, Briefcase, Compass, CalendarCheck, CheckSquare, X, FileText } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 interface SidebarProps {
@@ -44,6 +44,10 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           <Link onClick={onClose} to="/wizard" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/wizard')}`}>
             <Calendar size={20} />
             <span>Planificar</span>
+          </Link>
+          <Link onClick={onClose} to="/tickets" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/tickets')}`}>
+            <FileText size={20} />
+            <span>Mis Pasajes</span>
           </Link>
           <Link onClick={onClose} to="/itinerary" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/itinerary')}`}>
             <Map size={20} />

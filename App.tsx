@@ -11,6 +11,7 @@ import PreTripHub from './components/PreTripHub';
 import ScheduleView from './pages/ScheduleView';
 import MilestonesView from './pages/MilestonesView';
 import TravelerTips from './pages/TravelerTips';
+import TicketUpload from './pages/TicketUpload';
 
 const App = () => {
   return (
@@ -26,6 +27,7 @@ const App = () => {
             <Route path="milestones" element={<MilestonesView />} />
             <Route path="pre-trip" element={<PreTripHub />} />
             <Route path="tips" element={<TravelerTips />} />
+            <Route path="tickets" element={<TicketUpload />} />
           </Route>
         </Routes>
       </Router>

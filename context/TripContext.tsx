@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode, PropsWithChildren, useEffect, useRef } from 'react';
-import { TravelerProfile, TripPreferences, GeneratedItinerary, TripStyle, TravelSeason, TripSession, TravelerGuide, TripRequirements } from '../types';
+import { TravelerProfile, TripPreferences, GeneratedItinerary, TripStyle, TravelSeason, TripSession, TravelerGuide, TripRequirements, ModificationOption } from '../types';
 
 interface TripContextType {
   step: number;
@@ -21,6 +21,8 @@ interface TripContextType {
   setIsGenerating: (b: boolean) => void;
   loadSession: (session: TripSession) => void;
   exportSession: () => TripSession;
+  aiChatHistory: ModificationOption[];
+  setAiChatHistory: (options: ModificationOption[]) => void;
 }
 
 import { defaultTripSession } from '../data/defaultTrip';
@@ -75,6 +77,7 @@ export const TripProvider = ({ children }: PropsWithChildren<{}>) => {
   const [travelerGuide, setTravelerGuide] = useState<TravelerGuide | null>(null);
   const [tripRequirements, setTripRequirements] = useState<TripRequirements | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [aiChatHistory, setAiChatHistory] = useState<ModificationOption[]>([]);
 
   // Load default session on mount
   useEffect(() => {
@@ -144,7 +147,8 @@ export const TripProvider = ({ children }: PropsWithChildren<{}>) => {
       travelerGuide, setTravelerGuide,
       tripRequirements, setTripRequirements,
       isGenerating, setIsGenerating,
-      loadSession, exportSession
+      loadSession, exportSession,
+      aiChatHistory, setAiChatHistory
     }}>
       {children}
     </TripContext.Provider>

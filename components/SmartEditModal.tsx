@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Wand2, ArrowRight, Sparkles, Split, Timer, Wallet, CheckCircle2 } from 'lucide-react';
 import { GeneratedItinerary, ModificationOption } from '../types';
 import { generateModificationOptions } from '../services/geminiService';
+import { useTrip } from '../context/TripContext';
 
 interface SmartEditModalProps {
   currentItinerary: GeneratedItinerary;
@@ -12,10 +13,12 @@ interface SmartEditModalProps {
 }
 
 const SmartEditModal: React.FC<SmartEditModalProps> = ({ currentItinerary, initialPrompt, onSave, onClose }) => {
+  const { aiChatHistory, setAiChatHistory } = useTrip();
+
   const [prompt, setPrompt] = useState(initialPrompt || '');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [options, setOptions] = useState<ModificationOption[]>([]);
-  const [view, setView] = useState<'input' | 'options'>('input');
+  // Remove local options state, use context
+  const [view, setView] = useState<'input' | 'options'>(aiChatHistory.length > 0 ? 'options' : 'input');
 
   useEffect(() => {
     if (initialPrompt) {
@@ -28,7 +31,9 @@ const SmartEditModal: React.FC<SmartEditModalProps> = ({ currentItinerary, initi
 
     setIsProcessing(true);
     const generatedOptions = await generateModificationOptions(currentItinerary, prompt);
-    setOptions(generatedOptions);
+    // Persist to context
+    setAiChatHistory(generatedOptions);
+
     setView('options');
     setIsProcessing(false);
   };
@@ -41,7 +46,7 @@ const SmartEditModal: React.FC<SmartEditModalProps> = ({ currentItinerary, initi
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
       <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col relative max-h-[90vh]">
-        
+
         {/* Header */}
         <div className="bg-gradient-to-r from-indigo-600 to-violet-600 p-6 text-white shrink-0">
           <div className="flex justify-between items-start">
@@ -53,9 +58,9 @@ const SmartEditModal: React.FC<SmartEditModalProps> = ({ currentItinerary, initi
                 {view === 'input' ? 'Pide cambios globales o específicos y te daré opciones.' : 'He rediseñado tu ruta con estas estrategias:'}
               </p>
             </div>
-            <button 
+            <button
               onClick={onClose}
-              disabled={isProcessing} 
+              disabled={isProcessing}
               className="text-white/70 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors"
             >
               <X size={24} />
@@ -65,7 +70,7 @@ const SmartEditModal: React.FC<SmartEditModalProps> = ({ currentItinerary, initi
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-6 bg-slate-50">
-          
+
           {view === 'input' && (
             <div className="space-y-6 animate-fade-in">
               <div>
@@ -73,7 +78,7 @@ const SmartEditModal: React.FC<SmartEditModalProps> = ({ currentItinerary, initi
                   ¿Qué cambios deseas hacer hoy?
                 </label>
                 <div className="relative">
-                  <textarea 
+                  <textarea
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     placeholder="Ej: Eliminar Venecia y agregar 2 días a Roma, o cambiar Italia por Grecia..."
@@ -90,7 +95,7 @@ const SmartEditModal: React.FC<SmartEditModalProps> = ({ currentItinerary, initi
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">Acciones Rápidas (Globales)</h4>
                 <div className="flex flex-wrap gap-2">
                   {["Cambiar Italia por España", "Eliminar Londres", "Reducir presupuesto a 'Bajo'", "Hacer el viaje más relajado"].map((sug, i) => (
-                    <button 
+                    <button
                       key={i}
                       onClick={() => setPrompt(sug)}
                       className="px-3 py-1.5 bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 rounded-lg text-sm font-medium border border-slate-200 hover:border-indigo-200 transition-colors"
@@ -110,18 +115,18 @@ const SmartEditModal: React.FC<SmartEditModalProps> = ({ currentItinerary, initi
                 <button onClick={() => setView('input')} className="text-indigo-600 underline ml-auto">Editar pedido</button>
               </div>
 
-              {options.length === 0 ? (
-                 <div className="text-center py-10 text-slate-500">No se encontraron opciones viables. Intenta reformular.</div>
+              {aiChatHistory.length === 0 ? (
+                <div className="text-center py-10 text-slate-500">No se encontraron opciones viables. Intenta reformular.</div>
               ) : (
                 <div className="grid gap-4">
-                  {options.map((opt, idx) => (
-                    <button 
+                  {aiChatHistory.map((opt, idx) => (
+                    <button
                       key={opt.id}
                       onClick={() => handleSelectOption(opt)}
                       className="group relative bg-white p-6 rounded-2xl border-2 border-slate-100 hover:border-indigo-500 hover:shadow-xl transition-all text-left w-full overflow-hidden"
                     >
                       <div className="absolute top-0 left-0 w-1 h-full bg-slate-200 group-hover:bg-indigo-500 transition-colors"></div>
-                      
+
                       <div className="flex justify-between items-start mb-3">
                         <h3 className="text-lg font-bold text-slate-800 group-hover:text-indigo-700 flex items-center gap-2">
                           <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-600 flex items-center justify-center text-xs font-bold">
@@ -133,7 +138,7 @@ const SmartEditModal: React.FC<SmartEditModalProps> = ({ currentItinerary, initi
                           <CheckCircle2 size={24} />
                         </div>
                       </div>
-                      
+
                       <p className="text-slate-600 text-sm leading-relaxed mb-4">
                         {opt.description}
                       </p>
@@ -158,14 +163,14 @@ const SmartEditModal: React.FC<SmartEditModalProps> = ({ currentItinerary, initi
         <div className="p-5 border-t border-slate-100 bg-white flex justify-between items-center shrink-0">
           {view === 'input' ? (
             <>
-              <button 
-                onClick={onClose} 
+              <button
+                onClick={onClose}
                 disabled={isProcessing}
                 className="px-4 py-2 text-slate-500 font-bold hover:bg-slate-100 rounded-lg transition-colors"
               >
                 Cancelar
               </button>
-              <button 
+              <button
                 onClick={handleAnalyze}
                 disabled={!prompt.trim() || isProcessing}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-1"
@@ -185,7 +190,7 @@ const SmartEditModal: React.FC<SmartEditModalProps> = ({ currentItinerary, initi
             </>
           ) : (
             <div className="w-full flex justify-center">
-               <p className="text-xs text-slate-400 font-medium">Selecciona la mejor estrategia para actualizar tu itinerario</p>
+              <p className="text-xs text-slate-400 font-medium">Selecciona la mejor estrategia para actualizar tu itinerario</p>
             </div>
           )}
         </div>
